@@ -30,5 +30,5 @@ def get_data(coin, base_coin, timeframe):
     return data
 
 if __name__ == "__main__":
-    data = get_data("BTC", "USDT", "1m")
+    data = get_data("SOL", "USDT", "1m")
     print(pd.DataFrame(data))

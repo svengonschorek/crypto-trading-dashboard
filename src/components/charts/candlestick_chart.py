@@ -61,10 +61,12 @@ def candlestick_chart(height, width):
             start=start_time,
             periods=100,
             freq=f"{interval}min" if interval not in ['D'] else 'D')
-        extend_time = pd.DataFrame({'time': future_time_series})
+        extend_time = pd.DataFrame({'time': future_time_series}).sort_values(by='time')
 
         # combine base data with extended time series
-        return pd.concat([base_data, extend_time], ignore_index=True)
+        combined = pd.concat([base_data, extend_time], ignore_index=False)
+        combined.to_csv("debug_candlestick_data.csv")
+        return combined
 
     with st.container(horizontal_alignment="center"):
         chart = StreamlitChart(
