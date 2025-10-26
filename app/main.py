@@ -9,7 +9,7 @@ project_root = os.path.join(script_dir, "..")
 sys.path.append(os.path.abspath(project_root))
 
 from src.components.charts.candlestick_chart import candlestick_chart
-from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary
+from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary, get_trading_setups
 
 screenD = ScreenData(setTimeout=1000)
 screen_stats = screenD.st_screen_data()
@@ -34,6 +34,7 @@ candlestick_chart(
 analysis_metadata = get_analysis_metadata()
 market_structure = get_market_structure()
 chart_patterns = get_chart_patterns()
+trading_setups = get_trading_setups()
 summary = get_summary()
 
 st.subheader("Analysis Metadata:")
@@ -44,6 +45,9 @@ st.json(market_structure)
 
 st.subheader("Chart Patterns:")
 st.json(chart_patterns)
+
+st.subheader("Trading Setups:")
+st.json(trading_setups)
 
 st.subheader("Summary:")
 st.json(summary)
