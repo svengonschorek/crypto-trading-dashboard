@@ -79,19 +79,20 @@ def candlestick_chart(symbol,height, width):
 
         # Add liquidity zones as markers
         liquidity_zones = get_liquidity_zones(symbol, interval)
-        for zone in liquidity_zones["swing_highs"]:
+
+        if liquidity_zones["nearest_swing_high"] != {}:
             chart.marker(
-                time = pd.to_datetime(zone['timestamp']),
-                text = f"{zone['significance']} | {zone['swept']}",
+                time=pd.to_datetime(liquidity_zones["nearest_swing_high"]["timestamp"]),
+                text=f"{liquidity_zones['nearest_swing_high']['significance']} | {liquidity_zones['nearest_swing_high']['swept']}",
                 color="#e91e1ea6",
                 shape="arrowDown",
                 position="above"
             )
 
-        for zone in liquidity_zones["swing_lows"]:
+        if liquidity_zones["nearest_swing_low"] != {}:
             chart.marker(
-                time = pd.to_datetime(zone['timestamp']),
-                text = f"{zone['significance']} | {zone['swept']}",
+                time=pd.to_datetime(liquidity_zones["nearest_swing_low"]["timestamp"]),
+                text=f"{liquidity_zones['nearest_swing_low']['significance']} | {liquidity_zones['nearest_swing_low']['swept']}",
                 color="#2195F3B2",
                 shape="arrowUp",
                 position="below"

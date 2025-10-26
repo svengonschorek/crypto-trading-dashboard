@@ -1,15 +1,62 @@
-Analyze the provided K-line data on different timeframes to identify Smart Money Concepts (SMC) and common chart patterns.
-1. Market Structure: Determine the current higher timeframe (H1) structural bias (Bullish/Bearish) and confirm the latest 15-minute & 1h-hour Market Structure Shift (MSS) or Change of Character (CHOCH).
-2. Liquidity & Order Blocks & Fair Value Gaps:
-    - Identify the most recent swing high/low that serves as a liquidity target (Liquidity Sweep potential).
-    - Locate the nearest confirmed Demand Order Block (DB) and Supply Order Block (SB).
-    - Identify relevant Fair Value Gaps (FVG)
-3. Chart Pattern Recognition: Scan the last 50 candles for signs of a major reversal pattern (e.g., Double Top, Double Bottom, Head & Shoulders).
-4. Output:
-   - Current Structural Bias and Confirmation (e.g., H1 Bullish, 15M confirmed CHOCH).
-   - High-Probability Entry Zone: State the price range of the Demand Block or Supply Block to trade from.
-   - Trade Rationale: Explain whether the trade is a 'Continuation' or 'Reversal' setup based on SMC and pattern confirmation.
-   - Risk Note: Highlight the price level where the structural bias is definitively invalidated.
-   - Suggest different trading setups with a confidence ranking or score.
+Analyze the provided K-line data across 5-minute, 15-minute, and 1-hour timeframes.
 
-Return ONLY valid JSON with no additional text or formatting.
+Current timestamp: [INSERT_CURRENT_TIMESTAMP]
+Symbol: [INSERT_SYMBOL]
+Current Price: [INSERT_LAST_CLOSE]
+
+ANALYSIS REQUIREMENTS:
+
+1. **Market Structure Analysis:**
+   - Identify H1 structural bias (is price making higher highs/higher lows OR lower highs/lower lows?)
+   - Locate the most recent M15 and H1 structure shifts (CHOCH/MSS/BOS)
+   - Determine if M15 and H1 timeframes are aligned or divergent
+   - Specify the exact price level where current bias is invalidated
+
+2. **Liquidity Mapping:**
+   - Find the nearest significant swing high and swing low to current price
+   - Identify any recent liquidity sweeps (false breakouts with wick rejections)
+   - Calculate distance from current price in percentage terms
+   - Rate significance based on how clear the swing point is
+
+3. **Order Block Identification:**
+   - Locate the NEAREST untested or minimally tested Demand Block below current price
+   - Locate the NEAREST untested or minimally tested Supply Block above current price
+   - Include only blocks within 5% of current price
+   - Rate strength based on: impulse move size after formation, volume, time since formation
+   - Note which timeframe each block formed on
+
+4. **Fair Value Gap Detection:**
+   - Identify unfilled or partially filled FVGs within 3% of current price
+   - Prioritize FVGs on M15 and H1 timeframes
+   - Calculate fill percentage (0% = completely unfilled, 100% = completely filled)
+
+5. **Chart Pattern Recognition:**
+   - Scan for major reversal or continuation patterns on M15 and H1
+   - Only include patterns that are at least 70% formed
+   - Calculate measured move targets using standard pattern rules
+
+6. **Trading Setup Generation:**
+   - Provide 2-3 high-probability setups ranked by confidence score
+   - Each setup must include: clear entry zone, stop loss with reasoning, minimum 2 take profit targets, risk/reward ratio
+   - Explain confluence factors (what makes this setup high probability)
+   - Specify exact conditions to wait for before entry
+   - State what would invalidate the setup
+
+7. **Output Summary:**
+   - What is the current market phase?
+   - What action should be taken NOW (wait/enter/stay out)?
+   - What is the next key price level or event to watch?
+
+SETUP GENERATION RULES:
+- Provide setups at DIFFERENT price levels (minimum 1.5% apart)
+- If current price is already in an entry zone, set ready_to_enter=true and explain what final confirmation is needed
+- If no confirmation needed and price is in zone, recommend "enter_now"
+- Only provide multiple setups if they represent genuinely different trading approaches
+- Clearly state in immediate_next_step what the trader should do RIGHT NOW
+
+Example of good differentiation:
+- Setup 1 (Aggressive): Enter at 45,200 (0.5% below current) - partial FVG fill
+- Setup 2 (Conservative): Enter at 44,800 (1.8% below current) - H1 demand block + full FVG fill
+- Setup 3 (Breakout): Enter at 46,000 (2.1% above current) - after break and retest of 45,750 resistance
+
+Return ONLY valid JSON matching the specified schema. No additional text.

@@ -16,7 +16,7 @@ def load_latest_analysis(symbol=None):
         return json.dumps({
             "analysis_metadata": {},
             "market_structure": {},
-            "liquidity": {"swing_highs": [], "swing_lows": []},
+            "liquidity": {"nearest_swing_high": {}, "nearest_swing_low": {}},
             "order_blocks": [],
             "fair_value_gaps": [],
             "chart_patterns": [],
@@ -44,7 +44,7 @@ def get_liquidity_zones(symbol=None, interval=None):
     if int(interval) >= 5:
         return json.loads(last_analysis)['liquidity']
     else:
-        return {"swing_highs": [], "swing_lows": []}
+        return {"nearest_swing_high": {}, "nearest_swing_low": {}}
 
 def get_order_blocks(symbol=None):
     last_analysis = load_latest_analysis(symbol)

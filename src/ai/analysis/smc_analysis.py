@@ -33,7 +33,7 @@ def format_klines_compact(klines):
     # Convert to CSV string (most compact)
     return df.to_csv(index=False, float_format='%.2f')
 
-def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h):
+def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h, symbol="SOL"):
     """
     Create message with prompt caching for kline data
     """
@@ -55,7 +55,7 @@ def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h):
     
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
-        max_tokens=4096,
+        max_tokens=8096 ,
         system=[
             {
                 "type": "text", 
@@ -64,24 +64,14 @@ def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h):
             },
             {
                 "type": "text",
-                "text": f"Here is the kline data in CSV format for 5 min timeframe:\n\n{kline_data_5m}",
-                "cache_control": {"type": "ephemeral"}
-            },
-            {
-                "type": "text",
-                "text": f"Here is the kline data in CSV format for 15 min timeframe:\n\n{kline_data_15m}",
-                "cache_control": {"type": "ephemeral"}
-            },
-            {
-                "type": "text",
-                "text": f"Here is the kline data in CSV format for 1 hour timeframe:\n\n{kline_data_1h}",
+                "text": f"Here is the kline data in CSV format for 5 min, 15 min and 1h timeframe:\n\n{kline_data_5m}\n\n{kline_data_15m}\n\n{kline_data_1h}",
                 "cache_control": {"type": "ephemeral"}
             }
         ],
         messages=[
             {
                 "role": "user",
-                "content": user_prompt
+                "content": user_prompt + "You are going to analyse " + symbol
             }
         ]
     )
@@ -91,10 +81,10 @@ def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h):
 def perform_smc_analysis(symbol="SOL"):
     """Perform SMC analysis and save results to JSON file"""
     klines_5m = get_data(symbol, "USDT", "5", 200)
-    klines_15m = get_data(symbol, "USDT", "15m", 200)
-    klines_1h = get_data(symbol, "USDT", "1h", 200)
+    klines_15m = get_data(symbol, "USDT", "15", 200)
+    klines_1h = get_data(symbol, "USDT", "60", 200)
 
-    response = create_trading_message_with_cache(klines_5m, klines_15m, klines_1h)
+    response = create_trading_message_with_cache(klines_5m, klines_15m, klines_1h, symbol)
 
     # Save response to JSON file
     now = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")

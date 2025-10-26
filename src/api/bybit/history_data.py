@@ -48,11 +48,8 @@ def _normalize_history_df(df: pd.DataFrame, timeframe) -> pd.DataFrame:
     # sort and remove duplicate times (keep last / most recent)
     df = df.sort_values('time').drop_duplicates(subset=['time'], keep='last').sort_values('time').reset_index(drop=True)
 
-    # remove tz if present then format as requested string
-    if pd.api.types.is_datetime64_any_dtype(df['time']):
-        if df['time'].dt.tz is not None:
-            df['time'] = df['time'].dt.tz_convert(None).dt.tz_localize(None)
-        df['time'] = df['time'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    # convert time from utc to Europe/Berlin timezone
+    df['time'] = df['time'].dt.tz_localize('UTC').dt.tz_convert('Europe/Berlin')
 
     # ensure required columns exist
     for c in ('open', 'high', 'low', 'close'):
@@ -87,4 +84,5 @@ def get_data(symbol: str, quote: str, timeframe: str = "5", limit: int = 2000) -
         data.append(row)
 
     raw_df = pd.DataFrame(data)
+
     return _normalize_history_df(raw_df, timeframe)
