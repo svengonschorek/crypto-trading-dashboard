@@ -87,5 +87,4 @@ def get_data(symbol: str, quote: str, timeframe: str = "5", limit: int = 2000) -
         data.append(row)
 
     raw_df = pd.DataFrame(data)
-
     return _normalize_history_df(raw_df, timeframe)

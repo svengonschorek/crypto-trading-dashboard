@@ -10,12 +10,10 @@ sys.path.append(os.path.abspath(project_root))
 
 from src.components.charts.candlestick_chart import candlestick_chart
 from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary, get_trading_setups
+from src.ai.analysis.smc_analysis import perform_smc_analysis
 
 screenD = ScreenData(setTimeout=1000)
 screen_stats = screenD.st_screen_data()
-
-width = screen_stats['innerWidth'] * 0.88 - screen_stats['innerWidth'] * 0.2
-height = screen_stats['innerHeight'] * 0.8
 
 # Dashboard styling
 with open("./.streamlit/styles.css") as f:
@@ -23,19 +21,26 @@ with open("./.streamlit/styles.css") as f:
 
 st.set_page_config(layout="wide")
 
-st.title("Crypto Trading Analysis Dashboard")
-st.write("")
+st.sidebar.title("Crypto Trading Analysis")
+coins = ['BTC', 'ETH', 'SOL', 'ADA', 'XRP', 'LTC', 'DOT', 'DOGE', 'AVAX', 'MATIC', 'HYPE']
+selected_coin = st.sidebar.selectbox('Coin', coins, index=0, label_visibility="hidden")
+
+if st.sidebar.button("Refresh Analysis Data"):
+    with st.spinner("Performing SMC Analysis..."):
+        perform_smc_analysis(symbol=selected_coin)
+    st.sidebar.success("Analysis Data Refreshed!")
 
 candlestick_chart(
-    height=screen_stats['innerHeight'] * 0.65,
-    width=screen_stats['innerWidth'] * 0.95
+    symbol=selected_coin,
+    height=screen_stats['innerHeight'] * 0.75,
+    width=screen_stats['innerWidth']
 )
 
-analysis_metadata = get_analysis_metadata()
-market_structure = get_market_structure()
-chart_patterns = get_chart_patterns()
-trading_setups = get_trading_setups()
-summary = get_summary()
+analysis_metadata = get_analysis_metadata(symbol=selected_coin)
+market_structure = get_market_structure(symbol=selected_coin)
+chart_patterns = get_chart_patterns(symbol=selected_coin)
+trading_setups = get_trading_setups(symbol=selected_coin)
+summary = get_summary(symbol=selected_coin)
 
 st.subheader("Analysis Metadata:")
 st.json(analysis_metadata)

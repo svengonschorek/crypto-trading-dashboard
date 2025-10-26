@@ -88,24 +88,25 @@ def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h):
     
     return response
 
+def perform_smc_analysis(symbol="SOL"):
+    """Perform SMC analysis and save results to JSON file"""
+    klines_5m = get_data(symbol, "USDT", "5", 200)
+    klines_15m = get_data(symbol, "USDT", "15m", 200)
+    klines_1h = get_data(symbol, "USDT", "1h", 200)
 
-klines_5m = get_data("SOL", "USDT", "5", 200)
-klines_15m = get_data("SOL", "USDT", "15m", 200)
-klines_1h = get_data("SOL", "USDT", "1h", 200)
+    response = create_trading_message_with_cache(klines_5m, klines_15m, klines_1h)
 
-response = create_trading_message_with_cache(klines_5m, klines_15m, klines_1h)
+    # Save response to JSON file
+    now = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
+    # Save to project root data directory
+    project_root = os.path.join(script_dir, "..", "..", "..")
+    data_dir = os.path.join(project_root, "data", "analysis_results")
+    file_name = os.path.join(data_dir, f"analysis_{symbol}_USDT_{now}.json")
+    with open(file_name, "w") as file:
+        json.dump(extract_json(response.content[0].text), file)
 
-# Save response to JSON file
-now = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
-# Save to project root data directory
-project_root = os.path.join(script_dir, "..", "..", "..")
-data_dir = os.path.join(project_root, "data", "analysis_results")
-file_name = os.path.join(data_dir, f"analysis_SOL_USDT_{now}.json")
-with open(file_name, "w") as file:
-    json.dump(extract_json(response.content[0].text), file)
-
-# Check cache performance
-print(f"\nCache stats:")
-print(f"Input tokens: {response.usage.input_tokens}")
-print(f"Cache creation tokens: {response.usage.cache_creation_input_tokens}")
-print(f"Cache read tokens: {response.usage.cache_read_input_tokens}")
+    # Check cache performance
+    print(f"\nCache stats:")
+    print(f"Input tokens: {response.usage.input_tokens}")
+    print(f"Cache creation tokens: {response.usage.cache_creation_input_tokens}")
+    print(f"Cache read tokens: {response.usage.cache_read_input_tokens}")

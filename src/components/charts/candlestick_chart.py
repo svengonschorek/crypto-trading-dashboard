@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(project_root))
 from src.api.bybit.history_data import get_data
 from src.ai.analysis.parse_analysis import get_liquidity_zones
 
-def candlestick_chart(height, width):
+def candlestick_chart(symbol,height, width):
     interval = "5"
 
     # Data Preparation
@@ -52,7 +52,7 @@ def candlestick_chart(height, width):
 
     def data_loader():
         # load base data
-        base_data = pd.DataFrame(get_data("SOL", "USDT", interval)).sort_values(by='time')
+        base_data = pd.DataFrame(get_data(symbol, "USDT", interval)).sort_values(by='time')
 
         # extend time series into the future
         max_time = pd.to_datetime(base_data['time'].max())
@@ -65,7 +65,6 @@ def candlestick_chart(height, width):
 
         # combine base data with extended time series
         combined = pd.concat([base_data, extend_time], ignore_index=False)
-        combined.to_csv("debug_candlestick_data.csv")
         return combined
 
     with st.container(horizontal_alignment="center"):
@@ -79,7 +78,7 @@ def candlestick_chart(height, width):
         chart.set(data_loader())
 
         # Add liquidity zones as markers
-        liquidity_zones = get_liquidity_zones()
+        liquidity_zones = get_liquidity_zones(symbol, interval)
         for zone in liquidity_zones["swing_highs"]:
             chart.marker(
                 time = pd.to_datetime(zone['timestamp']),
