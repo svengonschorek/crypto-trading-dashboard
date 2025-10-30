@@ -128,7 +128,6 @@ def candlestick_chart(symbol,height, width):
         fair_value_gaps = get_fair_value_gaps(symbol)
 
         for fvg in fair_value_gaps:
-            print(fvg)
             if fvg["timeframe"] == option_map[timeframe_switch]:
                 if fvg["type"] == "bullish":
                     chart.box(
