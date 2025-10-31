@@ -31,7 +31,7 @@ def format_klines_compact(klines):
     df = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
     
     # Convert to CSV string (most compact)
-    return df.to_csv(index=False, float_format='%.2f')
+    return df.to_csv(index=False)
 
 def create_trading_message_with_cache(klines_5m, klines_15m, klines_1h, symbol="SOL"):
     """

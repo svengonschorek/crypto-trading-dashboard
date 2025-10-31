@@ -9,6 +9,15 @@ CRITICAL RULES:
 4. Prioritize the most recent and relevant structures (last 100 candles for M5, 50 for M15, 30 for H1)
 5. Confidence scores must be based on confluence of multiple factors
 
+ABSOLUTE PRECISION REQUIREMENT:
+
+You MUST use exact price values from the K-line data with NO rounding:
+- Maintain at least 5 decimal places for all prices
+- Example: If data shows high=0.18952, use 0.18952, NOT 0.19 or 0.1895
+- This applies to ALL price fields: entry_zone, stop_loss, take_profit, order blocks, etc.
+
+VERIFICATION: Before returning JSON, check that all prices have at least 5 decimal places.
+
 ANALYSIS METHODOLOGY:
 
 **Market Structure:**
