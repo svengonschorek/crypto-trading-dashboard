@@ -10,7 +10,7 @@ project_root = os.path.join(script_dir, "..", "..", "..")
 sys.path.append(os.path.abspath(project_root))
 
 from src.api.bybit.history_data import get_data
-from src.ai.analysis.parse_analysis import get_liquidity_zones, get_order_blocks, get_fair_value_gaps
+from src.ai.analysis.parse_analysis import get_liquidity_zones, get_order_blocks, get_fair_value_gaps, get_analysis_metadata, get_trading_setup_timesstamps
 
 def candlestick_chart(symbol,height, width):
     interval = "5"
@@ -78,6 +78,17 @@ def candlestick_chart(symbol,height, width):
         chart.layout(background_color="#0a0a0a", text_color="#ffffff")
         chart.grid(vert_enabled=False, horz_enabled=False)
         chart.set(data_loader())
+
+        # Add time of analysis as a vertical line
+        analysis_metadata = get_analysis_metadata(symbol)
+        if analysis_metadata and "timestamp" in analysis_metadata:
+            chart.vertical_line(
+                time=pd.to_datetime(analysis_metadata["timestamp"]),
+                width=1,
+                color="#FFFFFF64",
+                style="dashed",
+                text="Analysis Time"
+            )
 
         # Add liquidity zones as markers
         liquidity_zones = get_liquidity_zones(symbol, int(interval) if interval not in ['D'] else 1440)
@@ -147,5 +158,51 @@ def candlestick_chart(symbol,height, width):
                         fill_color="#FF22007D",
                         color="#560000FF"
                     )
+        
+        # Add trading setup as boxes
+        prio_trading_setup = get_trading_setup_timesstamps(symbol=symbol)
+        if prio_trading_setup:
+
+            if prio_trading_setup["entry_level"]["timestamp"]:
+                start_time = prio_trading_setup["entry_level"]["timestamp"]
+            else:
+                start_time = pd.Timestamp.now(tz='UTC') + pd.Timedelta(minutes=int(interval) + (5 * int(interval)) if interval not in ['D'] else 1440)
+
+            if prio_trading_setup["take_profit_levels"] != []:
+                all_tp_hit = all(profit['timestamp'] is not None for profit in prio_trading_setup["take_profit_levels"])
+            else :
+                all_tp_hit = False
+            
+            if prio_trading_setup["stop_loss_level"]["timestamp"]:
+                end_time = prio_trading_setup["stop_loss_level"]["timestamp"]
+            elif all_tp_hit:
+                end_time = max(prio_trading_setup["take_profit_levels"], key=lambda x: x['timestamp'])['timestamp']
+            else:
+                end_time = pd.Timestamp.now(tz='UTC') + pd.Timedelta(minutes=int(interval) + (20 * int(interval)) if interval not in ['D'] else 1440)
+
+            if prio_trading_setup["entry_level"]["direction"] == "long":
+                end_value_tp = max(prio_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
+            else:
+                end_value_tp = min(prio_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
+
+            chart.box(
+                start_time=start_time,
+                end_time=end_time,
+                start_value=prio_trading_setup["entry_level"]["entry_price"],
+                end_value=end_value_tp,
+                fill_color="#06480434",
+                color="#7D7D7D80",
+                width=1
+            )
+
+            chart.box(
+                start_time=start_time,
+                end_time=end_time,
+                start_value=prio_trading_setup["entry_level"]["entry_price"],
+                end_value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
+                fill_color="#84040434",
+                color="#7D7D7D80",
+                width=1
+            )
 
         chart.load()
