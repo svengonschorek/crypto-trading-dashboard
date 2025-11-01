@@ -81,7 +81,7 @@ def get_priority_trading_setup(symbol=None):
     
     return json.dumps(prio_setup, indent=2) if prio_setup else json.dumps({"error": "No priority trading setup found"}, indent=2)
 
-def get_trading_setup_timesstamps(symbol=None):
+def get_trading_setup_timesstamps(symbol=None, interval=5):
     prio_trading_setup = get_priority_trading_setup(symbol=symbol)
     analysis_metadata = get_analysis_metadata(symbol=symbol)
 
@@ -97,10 +97,13 @@ def get_trading_setup_timesstamps(symbol=None):
     # calculate limit based on current time and analysis timestamp
     current_timestamp = int(time.time() * 1000)
     minutes_diff = (current_timestamp - analysis_timestamp_milli) / (1000 * 60)
-    limit = int(minutes_diff / 5)
+    limit = int(minutes_diff / interval) if int(minutes_diff / interval) > 0 else 1
+
+    if limit < 1:
+        limit = 1
 
     # load historic data from bybit
-    historic_data = get_data(symbol=symbol, quote="USDT", timeframe="5", limit=limit)
+    historic_data = get_data(symbol=symbol, quote="USDT", timeframe=int(interval) if interval not in ['D'] else 1440, limit=limit)
 
     # calculate if and when the entry price was hit
     if prio_trading_setup != "{}":

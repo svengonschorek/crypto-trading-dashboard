@@ -160,9 +160,10 @@ def candlestick_chart(symbol,height, width):
                     )
         
         # Add trading setup as boxes
-        prio_trading_setup = get_trading_setup_timesstamps(symbol=symbol)
+        prio_trading_setup = get_trading_setup_timesstamps(symbol=symbol, interval=int(interval) if interval not in ['D'] else 1440)
         if prio_trading_setup:
-
+            
+            # calculate start and end times and values for boxes
             if prio_trading_setup["entry_level"]["timestamp"]:
                 start_time = prio_trading_setup["entry_level"]["timestamp"]
             else:
@@ -185,6 +186,7 @@ def candlestick_chart(symbol,height, width):
             else:
                 end_value_tp = min(prio_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
 
+            # draw boxes for take profit and stop loss levels
             chart.box(
                 start_time=start_time,
                 end_time=end_time,
@@ -202,6 +204,55 @@ def candlestick_chart(symbol,height, width):
                 end_value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
                 fill_color="#ed35445f",
                 color="#7D7D7D80",
+                width=1
+            )
+
+            # draw markers for take profit and stop loss levels
+            for tp in prio_trading_setup["take_profit_levels"]:
+                if tp["timestamp"]:
+                    chart.marker(
+                        time=pd.to_datetime(tp["timestamp"]),
+                        text=f"TP @ {tp['level']}",
+                        color="#089981",
+                        shape="arrowUp" if prio_trading_setup["entry_level"]["direction"] == "long" else "arrowDown",
+                        position="above" if prio_trading_setup["entry_level"]["direction"] == "long" else "below"
+                    )
+            
+            if prio_trading_setup["stop_loss_level"]["timestamp"]:
+                chart.marker(
+                    time=pd.to_datetime(prio_trading_setup["stop_loss_level"]["timestamp"]),
+                    text=f"SL @ {prio_trading_setup['stop_loss_level']['stop_loss_price']}",
+                    color="#ED3544",
+                    shape="arrowDown" if prio_trading_setup["entry_level"]["direction"] == "long" else "arrowUp",
+                    position="below" if prio_trading_setup["entry_level"]["direction"] == "long" else "above"
+                )
+
+            # draw price line for entry level, take profit and stop loss levels
+            chart.ray_line(
+                start_time=start_time,
+                value=prio_trading_setup["entry_level"]["entry_price"],
+                color="#4144E2FF",
+                style="dashed",
+                text="Entry Level",
+                width=1
+            )
+
+            for tp in prio_trading_setup["take_profit_levels"]:
+                chart.ray_line(
+                    start_time=start_time,
+                    value=tp["take_profit_price"],
+                    color="#089981",
+                    style="dashed",
+                    text=f"Take Profit Level {tp['level']}",
+                    width=1
+                )
+            
+            chart.ray_line(
+                start_time=start_time,
+                value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
+                color="#ED3544",
+                style="dashed",
+                text="Stop Loss Level",
                 width=1
             )
 
