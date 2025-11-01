@@ -84,7 +84,7 @@ def candlestick_chart(symbol,height, width):
         if analysis_metadata and "timestamp" in analysis_metadata:
             chart.vertical_line(
                 time=pd.to_datetime(analysis_metadata["timestamp"]),
-                width=1,
+                width=2,
                 color="#FFFFFF64",
                 style="dashed",
                 text="Analysis Time"
@@ -121,7 +121,7 @@ def candlestick_chart(symbol,height, width):
                 end_time=pd.Timestamp.now(),
                 start_value=supply["price_high"],
                 end_value=supply["price_low"],
-                fill_color="#FF00001F",
+                fill_color="#ed354453",
                 color="#FF000000"
             )
 
@@ -131,7 +131,7 @@ def candlestick_chart(symbol,height, width):
                 end_time=pd.Timestamp.now(),
                 start_value=demand["price_low"],
                 end_value=demand["price_high"],
-                fill_color="#04520446",
+                fill_color="#08998150",
                 color="#00FF0000"
             )
         
@@ -146,8 +146,8 @@ def candlestick_chart(symbol,height, width):
                         end_time=pd.to_datetime(fvg["timestamp"]) + pd.Timedelta(minutes=int(interval) if interval not in ['D'] else 1440),
                         start_value=fvg["price_low"],
                         end_value=fvg["price_high"],
-                        fill_color="#054D127C",
-                        color="#054D12FF"
+                        fill_color="#08998182",
+                        color="#08998182"
                     )
                 else:
                     chart.box(
@@ -155,8 +155,8 @@ def candlestick_chart(symbol,height, width):
                         end_time=pd.to_datetime(fvg["timestamp"]) + pd.Timedelta(minutes=int(interval) if interval not in ['D'] else 1440),
                         start_value=fvg["price_low"],
                         end_value=fvg["price_high"],
-                        fill_color="#FF22007D",
-                        color="#560000FF"
+                        fill_color="#fb000851",
+                        color="#fb000851"
                     )
         
         # Add trading setup as boxes
@@ -190,7 +190,7 @@ def candlestick_chart(symbol,height, width):
                 end_time=end_time,
                 start_value=prio_trading_setup["entry_level"]["entry_price"],
                 end_value=end_value_tp,
-                fill_color="#06480434",
+                fill_color="#08998157",
                 color="#7D7D7D80",
                 width=1
             )
@@ -200,7 +200,7 @@ def candlestick_chart(symbol,height, width):
                 end_time=end_time,
                 start_value=prio_trading_setup["entry_level"]["entry_price"],
                 end_value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
-                fill_color="#84040434",
+                fill_color="#ed35445f",
                 color="#7D7D7D80",
                 width=1
             )
