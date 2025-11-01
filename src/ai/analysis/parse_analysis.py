@@ -97,7 +97,7 @@ def get_trading_setup_timesstamps(symbol=None):
     # calculate limit based on current time and analysis timestamp
     current_timestamp = int(time.time() * 1000)
     minutes_diff = (current_timestamp - analysis_timestamp_milli) / (1000 * 60)
-    limit = int(minutes_diff / 5) + 1
+    limit = int(minutes_diff / 5)
 
     # load historic data from bybit
     historic_data = get_data(symbol=symbol, quote="USDT", timeframe="5", limit=limit)
@@ -109,7 +109,7 @@ def get_trading_setup_timesstamps(symbol=None):
 
         # look in python dataframe if entry price was hit
         if direction == "long":
-            mask = (historic_data['high'] <= entry_price) & (historic_data['low'] > entry_price)
+            mask = (historic_data['low'] <= entry_price) & (historic_data['high'] > entry_price)
         else:
             mask = (historic_data['high'] >= entry_price) & (historic_data['low'] < entry_price)
 
