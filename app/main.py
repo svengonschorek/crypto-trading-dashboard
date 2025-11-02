@@ -35,6 +35,30 @@ selected_analysis_timestamp = st.sidebar.selectbox("Analysis", [item['analysis_t
 timestamp_file_map = {item['analysis_timestamp']: item['file_name'] for item in analysis}
 analysis_filename = timestamp_file_map.get(selected_analysis_timestamp)
 
+# Trading setup selector
+trading_setups = get_trading_setups(file_name=analysis_filename)
+
+setups = []
+for setup in trading_setups:
+    if setup['setup_priority'] == 1:
+        row = {
+            "id": setup['id'],
+            "style": setup['style'],
+            "selector": setup['style'].capitalize() + " (recommended)"
+        }
+        setups.append(row)
+    else:
+        row = {
+            "id": setup['id'],
+            "style": setup['style'],
+            "selector": setup['style'].capitalize()
+        }
+        setups.append(row)
+
+selected_trading_setup = st.sidebar.selectbox("Trading Setups", [item['selector'] for item in setups], index=0)
+trading_setups_selector_map = {item['selector']: item['id'] for item in setups}
+trading_setup_id = trading_setups_selector_map.get(selected_trading_setup)
+
 # Create New Analysis button
 if st.sidebar.button("Create New Analysis"):
     with st.spinner("Performing SMC Analysis..."):
@@ -47,6 +71,7 @@ if st.sidebar.button("Create New Analysis"):
 candlestick_chart(
     symbol=selected_coin,
     file_name=analysis_filename,
+    trading_setup_id=trading_setup_id,
     height=screen_stats['innerHeight'] * 0.75,
     width=screen_stats['innerWidth']
 )
@@ -55,7 +80,6 @@ candlestick_chart(
 analysis_metadata = get_analysis_metadata(file_name=analysis_filename)
 market_structure = get_market_structure(file_name=analysis_filename)
 chart_patterns = get_chart_patterns(file_name=analysis_filename)
-trading_setups = get_trading_setups(file_name=analysis_filename)
 summary = get_summary(file_name=analysis_filename)
 
 st.subheader("Analysis Metadata:")

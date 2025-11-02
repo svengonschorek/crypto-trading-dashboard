@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(project_root))
 from src.api.bybit.history_data import get_data
 from src.ai.analysis.parse_analysis import get_liquidity_zones, get_order_blocks, get_fair_value_gaps, get_analysis_metadata, get_trading_setup_timesstamps
 
-def candlestick_chart(symbol, file_name, height, width):
+def candlestick_chart(symbol, file_name, trading_setup_id, height, width):
     interval = "5"
 
     # Data Preparation
@@ -185,37 +185,42 @@ def candlestick_chart(symbol, file_name, height, width):
         
         # Add trading setup as boxes
         if "Trading Setups" in analysis_elements:
-            prio_trading_setup = get_trading_setup_timesstamps(file_name=file_name, symbol=symbol, interval=int(interval) if interval not in ['D'] else 1440)
+            selected_trading_setup = get_trading_setup_timesstamps(
+                file_name=file_name,
+                symbol=symbol,
+                trading_setup_id=trading_setup_id,
+                interval=int(interval) if interval not in ['D'] else 1440
+            )
 
-            if prio_trading_setup:
+            if selected_trading_setup:
                 # calculate start and end times and values for boxes
-                if prio_trading_setup["entry_level"]["timestamp"]:
-                    start_time = prio_trading_setup["entry_level"]["timestamp"]
+                if selected_trading_setup["entry_level"]["timestamp"]:
+                    start_time = selected_trading_setup["entry_level"]["timestamp"]
                 else:
                     start_time = pd.Timestamp.now(tz='UTC') + pd.Timedelta(minutes=int(interval) + (5 * int(interval)) if interval not in ['D'] else 1440)
 
-                if prio_trading_setup["take_profit_levels"] != []:
-                    all_tp_hit = all(profit['timestamp'] is not None for profit in prio_trading_setup["take_profit_levels"])
+                if selected_trading_setup["take_profit_levels"] != []:
+                    all_tp_hit = all(profit['timestamp'] is not None for profit in selected_trading_setup["take_profit_levels"])
                 else :
                     all_tp_hit = False
                 
-                if prio_trading_setup["stop_loss_level"]["timestamp"]:
-                    end_time = prio_trading_setup["stop_loss_level"]["timestamp"]
+                if selected_trading_setup["stop_loss_level"]["timestamp"]:
+                    end_time = selected_trading_setup["stop_loss_level"]["timestamp"]
                 elif all_tp_hit:
-                    end_time = max(prio_trading_setup["take_profit_levels"], key=lambda x: x['timestamp'])['timestamp']
+                    end_time = max(selected_trading_setup["take_profit_levels"], key=lambda x: x['timestamp'])['timestamp']
                 else:
                     end_time = pd.Timestamp.now(tz='UTC') + pd.Timedelta(minutes=int(interval) + (20 * int(interval)) if interval not in ['D'] else 1440)
 
-                if prio_trading_setup["entry_level"]["direction"] == "long":
-                    end_value_tp = max(prio_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
+                if selected_trading_setup["entry_level"]["direction"] == "long":
+                    end_value_tp = max(selected_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
                 else:
-                    end_value_tp = min(prio_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
+                    end_value_tp = min(selected_trading_setup["take_profit_levels"], key=lambda x: x['take_profit_price'])['take_profit_price']
 
                 # draw boxes for take profit and stop loss levels
                 chart.box(
                     start_time=start_time,
                     end_time=end_time,
-                    start_value=prio_trading_setup["entry_level"]["entry_price"],
+                    start_value=selected_trading_setup["entry_level"]["entry_price"],
                     end_value=end_value_tp,
                     fill_color="#08998157",
                     color="#7D7D7D80",
@@ -225,44 +230,44 @@ def candlestick_chart(symbol, file_name, height, width):
                 chart.box(
                     start_time=start_time,
                     end_time=end_time,
-                    start_value=prio_trading_setup["entry_level"]["entry_price"],
-                    end_value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
+                    start_value=selected_trading_setup["entry_level"]["entry_price"],
+                    end_value=selected_trading_setup["stop_loss_level"]["stop_loss_price"],
                     fill_color="#ed35445f",
                     color="#7D7D7D80",
                     width=1
                 )
 
                 # draw markers for take profit and stop loss levels
-                for tp in prio_trading_setup["take_profit_levels"]:
+                for tp in selected_trading_setup["take_profit_levels"]:
                     if tp["timestamp"]:
                         chart.marker(
                             time=pd.to_datetime(tp["timestamp"]),
                             text=f"TP @ {tp['level']}",
                             color="#089981",
-                            shape="arrowUp" if prio_trading_setup["entry_level"]["direction"] == "long" else "arrowDown",
-                            position="above" if prio_trading_setup["entry_level"]["direction"] == "long" else "below"
+                            shape="arrowUp" if selected_trading_setup["entry_level"]["direction"] == "long" else "arrowDown",
+                            position="above" if selected_trading_setup["entry_level"]["direction"] == "long" else "below"
                         )
                 
-                if prio_trading_setup["stop_loss_level"]["timestamp"]:
+                if selected_trading_setup["stop_loss_level"]["timestamp"]:
                     chart.marker(
-                        time=pd.to_datetime(prio_trading_setup["stop_loss_level"]["timestamp"]),
-                        text=f"SL @ {prio_trading_setup['stop_loss_level']['stop_loss_price']}",
+                        time=pd.to_datetime(selected_trading_setup["stop_loss_level"]["timestamp"]),
+                        text=f"SL @ {selected_trading_setup['stop_loss_level']['stop_loss_price']}",
                         color="#ED3544",
-                        shape="arrowDown" if prio_trading_setup["entry_level"]["direction"] == "long" else "arrowUp",
-                        position="below" if prio_trading_setup["entry_level"]["direction"] == "long" else "above"
+                        shape="arrowDown" if selected_trading_setup["entry_level"]["direction"] == "long" else "arrowUp",
+                        position="below" if selected_trading_setup["entry_level"]["direction"] == "long" else "above"
                     )
 
                 # draw price line for entry level, take profit and stop loss levels
                 chart.ray_line(
                     start_time=start_time,
-                    value=prio_trading_setup["entry_level"]["entry_price"],
+                    value=selected_trading_setup["entry_level"]["entry_price"],
                     color="#4144E2FF",
                     style="dashed",
                     text="Entry Level",
                     width=1
                 )
 
-                for tp in prio_trading_setup["take_profit_levels"]:
+                for tp in selected_trading_setup["take_profit_levels"]:
                     chart.ray_line(
                         start_time=start_time,
                         value=tp["take_profit_price"],
@@ -274,7 +279,7 @@ def candlestick_chart(symbol, file_name, height, width):
                 
                 chart.ray_line(
                     start_time=start_time,
-                    value=prio_trading_setup["stop_loss_level"]["stop_loss_price"],
+                    value=selected_trading_setup["stop_loss_level"]["stop_loss_price"],
                     color="#ED3544",
                     style="dashed",
                     text="Stop Loss Level",

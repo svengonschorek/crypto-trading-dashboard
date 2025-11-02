@@ -85,20 +85,19 @@ def get_summary(file_name=None):
     last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['summary']
 
-def get_priority_trading_setup(file_name=None):
+def get_trading_setup(file_name=None, trading_setup_id=None):
     trading_setups = get_trading_setups(file_name)
-    summary = get_summary(file_name)
-    prio_setup = None
+    selected_setup = None
 
     for setup in trading_setups:
-        if setup.get("id", 0) == summary.get("recommended_setup_id", -1):
-            prio_setup = setup
+        if setup.get("id", 0) == trading_setup_id:
+            selected_setup = setup
             break
     
-    return json.dumps(prio_setup, indent=2) if prio_setup else json.dumps({"error": "No priority trading setup found"}, indent=2)
+    return json.dumps(selected_setup, indent=2) if selected_setup else json.dumps({"error": "No priority trading setup found"}, indent=2)
 
-def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
-    prio_trading_setup = get_priority_trading_setup(file_name)
+def get_trading_setup_timesstamps(file_name=None, symbol=None, trading_setup_id=None, interval=5):
+    selected_trading_setup = get_trading_setup(file_name=file_name, trading_setup_id=trading_setup_id)
     analysis_metadata = get_analysis_metadata(file_name)
 
     # return empty dict if no analysis metadata found
@@ -122,9 +121,9 @@ def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
     historic_data = get_data(symbol=symbol, quote="USDT", timeframe=int(interval) if interval not in ['D'] else 1440, limit=limit)
 
     # calculate if and when the entry price was hit
-    if prio_trading_setup != "{}":
-        entry_price = json.loads(prio_trading_setup).get("entry_zone").get("optimal_entry")
-        direction = json.loads(prio_trading_setup).get("direction")
+    if selected_trading_setup != "{}":
+        entry_price = json.loads(selected_trading_setup).get("entry_zone").get("optimal_entry")
+        direction = json.loads(selected_trading_setup).get("direction")
 
         # look in python dataframe if entry price was hit
         if direction == "long":
@@ -140,18 +139,18 @@ def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
                 "entry_price": entry_price,
                 "direction": direction,
                 "timestamp": first_entry_hit['time'],
-                "description": json.loads(prio_trading_setup).get("entry_zone").get("description")
+                "description": json.loads(selected_trading_setup).get("entry_zone").get("description")
             }
         else:
             entry_level = {
                 "entry_price": entry_price,
                 "direction": direction,
                 "timestamp": None,
-                "description": json.loads(prio_trading_setup).get("entry_zone").get("description")
+                "description": json.loads(selected_trading_setup).get("entry_zone").get("description")
             }
 
         # check if take profit levels were hit after entry
-        take_profit_levels = json.loads(prio_trading_setup).get("take_profit_targets", [])
+        take_profit_levels = json.loads(selected_trading_setup).get("take_profit_targets", [])
         profit_levels = []
 
         if direction == "long" and first_entry_hit is not None:
@@ -210,18 +209,18 @@ def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
                 profit_levels.append(profit_row)
         
         # check if stop loss was hit after entry
-        stop_loss = json.loads(prio_trading_setup).get("stop_loss")
+        stop_loss = json.loads(selected_trading_setup).get("stop_loss")
         stop_loss_level = {
             "stop_loss_price": stop_loss,
             "timestamp": None,
-            "description": json.loads(prio_trading_setup).get("stop_loss_reasoning")
+            "description": json.loads(selected_trading_setup).get("stop_loss_reasoning")
         }
         
         if first_entry_hit is not None:
             if direction == "long":
-                sl_mask = (historic_data['low'] <= stop_loss)
+                sl_mask = (historic_data['low'] <= stop_loss) & (historic_data["time"] >= first_entry_hit["time"])
             else:
-                sl_mask = (historic_data['high'] >= stop_loss)
+                sl_mask = (historic_data['high'] >= stop_loss) & (historic_data["time"] >= first_entry_hit["time"])
 
             sl_hits = historic_data[sl_mask]
             if not sl_hits.empty:
@@ -229,7 +228,7 @@ def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
                 stop_loss_level = {
                     "stop_loss_price": stop_loss,
                     "timestamp": first_sl_hit['time'],
-                    "description": json.loads(prio_trading_setup).get("stop_loss_reasoning")
+                    "description": json.loads(selected_trading_setup).get("stop_loss_reasoning")
                 }
 
         # check if stop loss was hit before take profit levels
