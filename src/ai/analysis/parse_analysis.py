@@ -8,14 +8,9 @@ sys.path.append(os.path.abspath(project_root))
 
 from src.api.bybit.history_data import get_data
 
-def load_latest_analysis(symbol=None):
-    data_dir = os.path.join(project_root, "data", "analysis_results")
-    if not os.path.isdir(data_dir):
-        raise FileNotFoundError(f"analysis results directory not found: {data_dir}")
+def load_analysis(file_name = None):
 
-    files = [os.path.join(data_dir, fn) for fn in os.listdir(data_dir) if fn.lower().endswith(".json") and (fn.startswith(f"analysis_{symbol}_"))]
-    if not files:
-        latest_file = None
+    if not file_name:
         return json.dumps({
             "analysis_metadata": {},
             "market_structure": {},
@@ -27,51 +22,72 @@ def load_latest_analysis(symbol=None):
             "summary": {}
         })
     else:
-        files = sorted(files, key=os.path.getmtime, reverse=True)
-        latest_file = files[0]
-        with open(latest_file, "r") as f:
-            last_analysis = json.load(f)
+        with open(file_name, "r") as f:
+            analysis_result = json.load(f)
 
-        return last_analysis
+        return analysis_result
 
-def get_analysis_metadata(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def load_all_analysis(symbol=None):
+    data_dir = os.path.join(project_root, "data", "analysis_results")
+    if not os.path.isdir(data_dir):
+        raise FileNotFoundError(f"analysis results directory not found: {data_dir}")
+    
+    # get, sort and return file names
+    files = [os.path.join(data_dir, fn) for fn in os.listdir(data_dir) if fn.lower().endswith(".json") and (fn.startswith(f"analysis_{symbol}_"))]
+    if files:
+        files_sorted = sorted(files, key=os.path.getmtime, reverse=True)
+        analysis_list = []
+        for file in files_sorted:
+            with open(file, "r") as f:
+                analysis = json.load(f)
+                row = {
+                    "file_name": file,
+                    "analysis_timestamp": json.loads(analysis)['analysis_metadata']["timestamp"]
+                }
+            analysis_list.append(row)
+
+        return analysis_list
+    else:
+        return []
+
+def get_analysis_metadata(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['analysis_metadata']
 
-def get_market_structure(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_market_structure(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['market_structure']
 
-def get_liquidity_zones(symbol=None, interval=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_liquidity_zones(file_name=None, interval=None):
+    last_analysis = load_analysis(file_name)
     if int(interval) >= 5:
         return json.loads(last_analysis)['liquidity']
     else:
         return {"nearest_swing_high": {}, "nearest_swing_low": {}}
 
-def get_order_blocks(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_order_blocks(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['order_blocks']
 
-def get_fair_value_gaps(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_fair_value_gaps(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['fair_value_gaps']
 
-def get_chart_patterns(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_chart_patterns(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['chart_patterns']
 
-def get_trading_setups(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_trading_setups(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['trading_setups']
 
-def get_summary(symbol=None):
-    last_analysis = load_latest_analysis(symbol)
+def get_summary(file_name=None):
+    last_analysis = load_analysis(file_name)
     return json.loads(last_analysis)['summary']
 
-def get_priority_trading_setup(symbol=None):
-    trading_setups = get_trading_setups(symbol)
-    summary = get_summary(symbol)
+def get_priority_trading_setup(file_name=None):
+    trading_setups = get_trading_setups(file_name)
+    summary = get_summary(file_name)
     prio_setup = None
 
     for setup in trading_setups:
@@ -81,9 +97,9 @@ def get_priority_trading_setup(symbol=None):
     
     return json.dumps(prio_setup, indent=2) if prio_setup else json.dumps({"error": "No priority trading setup found"}, indent=2)
 
-def get_trading_setup_timesstamps(symbol=None, interval=5):
-    prio_trading_setup = get_priority_trading_setup(symbol=symbol)
-    analysis_metadata = get_analysis_metadata(symbol=symbol)
+def get_trading_setup_timesstamps(file_name=None, symbol=None, interval=5):
+    prio_trading_setup = get_priority_trading_setup(file_name)
+    analysis_metadata = get_analysis_metadata(file_name)
 
     # return empty dict if no analysis metadata found
     if analysis_metadata == {}:

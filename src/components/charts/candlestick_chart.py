@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(project_root))
 from src.api.bybit.history_data import get_data
 from src.ai.analysis.parse_analysis import get_liquidity_zones, get_order_blocks, get_fair_value_gaps, get_analysis_metadata, get_trading_setup_timesstamps
 
-def candlestick_chart(symbol, height, width):
+def candlestick_chart(symbol, file_name, height, width):
     interval = "5"
 
     # Data Preparation
@@ -101,7 +101,7 @@ def candlestick_chart(symbol, height, width):
         chart.set(data_loader())
 
         # Add time of analysis as a vertical line
-        analysis_metadata = get_analysis_metadata(symbol)
+        analysis_metadata = get_analysis_metadata(file_name)
         if analysis_metadata and "timestamp" in analysis_metadata:
             chart.vertical_line(
                 time=pd.to_datetime(analysis_metadata["timestamp"]),
@@ -113,7 +113,7 @@ def candlestick_chart(symbol, height, width):
 
         # Add liquidity zones as markers
         if "Liquidity Zones" in analysis_elements:
-            liquidity_zones = get_liquidity_zones(symbol, int(interval) if interval not in ['D'] else 1440)
+            liquidity_zones = get_liquidity_zones(file_name, int(interval) if interval not in ['D'] else 1440)
 
             if liquidity_zones["nearest_swing_high"] != {}:
                 chart.marker(
@@ -135,7 +135,7 @@ def candlestick_chart(symbol, height, width):
             
         # Add order blocks as boxes
         if "Order Blocks" in analysis_elements:
-            order_blocks = get_order_blocks(symbol)
+            order_blocks = get_order_blocks(file_name)
 
             if order_blocks:
                 supply = order_blocks["nearest_supply"]
@@ -160,7 +160,7 @@ def candlestick_chart(symbol, height, width):
         
         # Add fair value gaps as boxes
         if "Fair Value Gaps" in analysis_elements:
-            fair_value_gaps = get_fair_value_gaps(symbol)
+            fair_value_gaps = get_fair_value_gaps(file_name)
 
             for fvg in fair_value_gaps:
                 if fvg["timeframe"] == option_map_timeframe[timeframe_switch]:
@@ -185,9 +185,9 @@ def candlestick_chart(symbol, height, width):
         
         # Add trading setup as boxes
         if "Trading Setups" in analysis_elements:
-            prio_trading_setup = get_trading_setup_timesstamps(symbol=symbol, interval=int(interval) if interval not in ['D'] else 1440)
+            prio_trading_setup = get_trading_setup_timesstamps(file_name=file_name, symbol=symbol, interval=int(interval) if interval not in ['D'] else 1440)
+
             if prio_trading_setup:
-                
                 # calculate start and end times and values for boxes
                 if prio_trading_setup["entry_level"]["timestamp"]:
                     start_time = prio_trading_setup["entry_level"]["timestamp"]
