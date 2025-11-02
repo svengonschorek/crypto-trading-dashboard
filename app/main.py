@@ -9,7 +9,7 @@ project_root = os.path.join(script_dir, "..")
 sys.path.append(os.path.abspath(project_root))
 
 from src.components.charts.candlestick_chart import candlestick_chart
-from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary, get_trading_setups, load_all_analysis
+from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary, get_trading_setups, load_all_analysis, get_trading_setup
 from src.ai.analysis.smc_analysis import perform_smc_analysis
 
 screenD = ScreenData(setTimeout=1000)
@@ -82,17 +82,17 @@ market_structure = get_market_structure(file_name=analysis_filename)
 chart_patterns = get_chart_patterns(file_name=analysis_filename)
 summary = get_summary(file_name=analysis_filename)
 
-st.subheader("Analysis Metadata:")
-st.json(analysis_metadata)
+col1, col2 = st.columns([1, 1])
 
-st.subheader("Market Structure:")
-st.json(market_structure)
+with col1:
+    st.subheader("Analysis Metadata:")
+    st.json(analysis_metadata)
 
-st.subheader("Chart Patterns:")
-st.json(chart_patterns)
+    st.subheader("Summary:")
+    st.json(summary)
 
-st.subheader("Trading Setups:")
-st.json(trading_setups)
+with col2:
+    trading_setup = get_trading_setup(file_name=analysis_filename, trading_setup_id=trading_setup_id)
+    st.subheader("Trading Setup")
+    st.json(trading_setup)
 
-st.subheader("Summary:")
-st.json(summary)

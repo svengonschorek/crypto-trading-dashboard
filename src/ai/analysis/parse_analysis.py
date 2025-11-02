@@ -94,7 +94,7 @@ def get_trading_setup(file_name=None, trading_setup_id=None):
             selected_setup = setup
             break
     
-    return json.dumps(selected_setup, indent=2) if selected_setup else json.dumps({"error": "No priority trading setup found"}, indent=2)
+    return json.dumps(selected_setup, indent=2) if selected_setup else json.dumps({"error": "No trading setup found"}, indent=2)
 
 def get_trading_setup_timesstamps(file_name=None, symbol=None, trading_setup_id=None, interval=5):
     selected_trading_setup = get_trading_setup(file_name=file_name, trading_setup_id=trading_setup_id)
