@@ -22,21 +22,26 @@ with open("./.streamlit/styles.css") as f:
 st.set_page_config(layout="wide", page_title="Crypto Trading Ideas and Analysis")
 
 # Add sidebar with controls
+
+# Coin selector
 st.sidebar.title("Crypto Trading Analysis")
 coins = ['BTC', 'ETH', 'SOL', 'ADA', 'XRP', 'LTC', 'DOT', 'DOGE', 'AVAX', 'MATIC', 'HYPE']
-selected_coin = st.sidebar.selectbox('Coin', coins, index=0, label_visibility="hidden")
+selected_coin = st.sidebar.selectbox('Coin', coins, index=0)
 
+# Analysis selector
 analysis = load_all_analysis(symbol=selected_coin)
 selected_analysis_timestamp = st.sidebar.selectbox("Analysis", [item['analysis_timestamp'] for item in analysis], index=0)
 
 timestamp_file_map = {item['analysis_timestamp']: item['file_name'] for item in analysis}
 analysis_filename = timestamp_file_map.get(selected_analysis_timestamp)
 
-
+# Create New Analysis button
 if st.sidebar.button("Create New Analysis"):
     with st.spinner("Performing SMC Analysis..."):
         perform_smc_analysis(symbol=selected_coin)
     st.sidebar.success("Analysis Data Refreshed!")
+
+# Add Chart Elements
 
 # Add main candlestick chart
 candlestick_chart(
