@@ -1,4 +1,4 @@
-# Realtime Kline Dashboard
+# Crypto LLM Analysis Dashboard
 
 A web-based cryptocurrency trading analysis platform that performs AI-powered Smart Money Concepts (SMC) technical analysis on real-time K-line (candlestick) data from cryptocurrency exchanges.
 
