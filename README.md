@@ -58,7 +58,7 @@ realtime-kline-dashboard/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd realtime-kline-dashboard
+   cd crypto-trading-dashboard
    ```
 
 2. **Create environment file**
