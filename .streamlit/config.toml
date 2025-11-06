@@ -318,7 +318,7 @@ magicEnabled = true
 fastReruns = true
 
 [server]
-headless = false
+headless = true
 enableCORS = true
 enableXsrfProtection = true
 

@@ -1,0 +1,23 @@
+services:
+  crypto-llm-analysis:
+    build:
+      context: .
+    container_name: crypto-llm-analysis
+    ports:
+      - 8502:8502
+    env_file : .env
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - type: bind
+        source: ./app
+        target: /app
+      - type: bind
+        source: ./src
+        target: /src
+      - type: bind
+        source: ./data
+        target: /data
+      - type: bind
+        source: ./.streamlit
+        target: /.streamlit
