@@ -53,3 +53,11 @@ get_klines_csv_schema = ToolParam(
         }
     }
 )
+
+if __name__ == "__main__":
+    # Example usage of the get_klines_csv tool function
+    symbol = "SOL"
+    interval = "5"
+    limit = 100
+    csv_data = get_klines_csv(symbol, interval, limit)
+    print(csv_data)

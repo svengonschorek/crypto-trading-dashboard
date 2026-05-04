@@ -38,7 +38,7 @@ def chat(messages: list[Message], system=None, temperature=1.0, stop_sequences=[
     """Send a chat message to the model and receive a response."""
     params = {
         "model": model,
-        "max_tokens": 1000,
+        "max_tokens": 8000,
         "messages": messages,
         "temperature": temperature,
         "stop_sequences": stop_sequences,
@@ -68,7 +68,7 @@ def run_tool(tool_name, tool_input):
     
 def run_tools(message):
     """Run all tool calls found in the model's message and return their results."""
-    tool_requests = [block for block in message.content if block.type == "tool_call"]
+    tool_requests = [block for block in message.content if block.type == "tool_use"]
     tool_result_blocks = []
 
     for tool_request in tool_requests:
@@ -94,16 +94,35 @@ def run_tools(message):
     
     return tool_result_blocks
 
-def run_conversation(messages):
+def run_conversation(messages, system=None):
     while True:
-        response = chat(messages, tools=[get_klines_csv_schema])
+        response = chat(messages, system=system, tools=[get_klines_csv_schema])
         add_assistant_message(messages, response)
         print(text_from_message(response))
 
-        if response.stop_reason != "tool_call":
+        if response.stop_reason != "tool_use":
             break
 
         tool_results = run_tools(response)
         add_user_message(messages, tool_results)
 
     return messages
+
+if __name__ == "__main__":
+    # Navigate to prompts directory
+    prompts_dir = os.path.join(script_dir, "..", "prompts")
+    
+    with open(os.path.join(prompts_dir, "system_prompt.txt"), "r") as file:
+        system_prompt = file.read()
+    
+    with open(os.path.join(prompts_dir, "user_prompt.txt"), "r") as file:
+        user_prompt = file.read()
+    
+    messages = []
+
+    add_user_message(
+        messages,
+        user_prompt + "You are going to fetch klines data for SOL/USDT and analyze it."
+     )
+    
+    run_conversation(messages, system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}])
