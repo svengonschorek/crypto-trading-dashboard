@@ -96,9 +96,8 @@ def run_tools(message):
 
 def run_conversation(messages, system=None):
     while True:
-        response = chat(messages, system=system, tools=[get_klines_csv_schema])
+        response = chat(messages, system=system, tools=[get_klines_csv_schema], stop_sequences=[])
         add_assistant_message(messages, response)
-        print(text_from_message(response))
 
         if response.stop_reason != "tool_use":
             break
@@ -123,6 +122,11 @@ if __name__ == "__main__":
     add_user_message(
         messages,
         user_prompt + "You are going to fetch klines data for SOL/USDT and analyze it."
-     )
-    
-    run_conversation(messages, system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}])
+    )
+
+    messages = run_conversation(
+        messages,
+        system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
+    )
+
+    print(messages)
