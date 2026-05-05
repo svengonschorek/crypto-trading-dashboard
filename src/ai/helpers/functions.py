@@ -96,12 +96,16 @@ def run_tools(message):
 
 def run_conversation(messages, system=None):
     while True:
-        response = chat(messages, system=system, tools=[get_klines_csv_schema], stop_sequences=[])
-        add_assistant_message(messages, response)
+        response = chat(messages, system=system, tools=[get_klines_csv_schema])
 
         if response.stop_reason != "tool_use":
+            # Use assistant prefill to force clean JSON output
+            messages.append({"role": "assistant", "content": "{"})
+            final_response = chat(messages, system=system)
+            messages[-1] = {"role": "assistant", "content": "{" + text_from_message(final_response)}
             break
 
+        add_assistant_message(messages, response)
         tool_results = run_tools(response)
         add_user_message(messages, tool_results)
 
@@ -121,7 +125,7 @@ if __name__ == "__main__":
 
     add_user_message(
         messages,
-        user_prompt + "You are going to fetch klines data for SOL/USDT and analyze it."
+        "You are going to fetch klines data for SOL/USDT and analyze it." + user_prompt
     )
 
     messages = run_conversation(
