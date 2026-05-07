@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(project_root))
 
 from src.components.charts.candlestick_chart import candlestick_chart
 from src.ai.analysis.parse_analysis import get_analysis_metadata, get_market_structure, get_chart_patterns, get_summary, get_trading_setups, load_all_analysis, get_trading_setup
-from src.ai.analysis.smc_analysis import perform_smc_analysis
+from src.ai.analysis.candle_analysis import perform_candle_analysis
 
 screenD = ScreenData(setTimeout=1000)
 screen_stats = screenD.st_screen_data()
@@ -62,7 +62,7 @@ trading_setup_id = trading_setups_selector_map.get(selected_trading_setup)
 # Create New Analysis button
 if st.sidebar.button("Create New Analysis"):
     with st.spinner("Performing SMC Analysis..."):
-        perform_smc_analysis(symbol=selected_coin)
+        perform_candle_analysis(symbol=selected_coin)
     st.sidebar.success("Analysis Data Refreshed!")
 
 # Add Chart Elements
@@ -95,4 +95,3 @@ with col2:
     trading_setup = get_trading_setup(file_name=analysis_filename, trading_setup_id=trading_setup_id)
     st.subheader("Trading Setup")
     st.json(trading_setup)
-

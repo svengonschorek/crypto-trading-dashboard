@@ -23,7 +23,7 @@ def load_analysis(file_name = None):
         })
     else:
         with open(file_name, "r") as f:
-            analysis_result = json.load(f)
+            analysis_result = f.read()
 
         return analysis_result
 
@@ -39,7 +39,7 @@ def load_all_analysis(symbol=None):
         analysis_list = []
         for file in files_sorted:
             with open(file, "r") as f:
-                analysis = json.load(f)
+                analysis = f.read()
                 row = {
                     "file_name": file,
                     "analysis_timestamp": json.loads(analysis)['analysis_metadata']["timestamp"]
