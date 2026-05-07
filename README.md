@@ -5,7 +5,7 @@ A web-based cryptocurrency trading analysis platform that performs AI-powered Sm
 ## Features
 
 - **Real-time Cryptocurrency Analysis**: Monitor 11+ cryptocurrencies (BTC, ETH, SOL, ADA, XRP, LTC, DOT, DOGE, AVAX, MATIC, HYPE)
-- **AI-Driven SMC Analysis**: Leverage Claude AI and Google Gemini to identify high-probability trading setups
+- **AI-Driven SMC Analysis**: Leverage Claude (with Anthropic tool use) to identify high-probability trading setups
 - **Interactive Candlestick Charts**: Visualize trading signals, order blocks, liquidity zones, and fair value gaps
 - **Multi-Timeframe Analysis**: Analyze across 5m, 15m, 1h, 4h, and daily timeframes
 - **Smart Trading Setups**: Get aggressive, conservative, and breakout trading recommendations with risk/reward ratios
@@ -14,7 +14,7 @@ A web-based cryptocurrency trading analysis platform that performs AI-powered Sm
 
 - **Frontend**: Streamlit, Lightweight Charts
 - **Backend**: Python 3.12
-- **AI Models**: Anthropic Claude, Google Gemini
+- **AI Models**: Anthropic Claude (`claude-haiku-4-5`) with tool use + prompt caching
 - **Data Sources**: Bybit API, Binance API
 - **Deployment**: Docker, Docker Compose
 
@@ -27,12 +27,27 @@ realtime-kline-dashboard/
 ├── src/                          # Core application code
 │   ├── api/                      # Exchange API integrations
 │   │   ├── binance/             # Binance API handlers
+│   │   │   ├── history_data_binance.py
+│   │   │   ├── reatime_data_binance.py
+│   │   │   └── dashboard_binance.py
 │   │   └── bybit/               # Bybit API handlers
+│   │       ├── history_data.py
+│   │       └── reatime_data.py
 │   ├── ai/                       # AI analysis modules
 │   │   ├── analysis/            # Analysis engine
+│   │   │   ├── candle_analysis.py     # Orchestrates SMC analysis runs
+│   │   │   └── parse_analysis.py      # Parses analysis JSON for the UI
+│   │   ├── helpers/             # Claude API conversation helpers
+│   │   │   └── functions.py           # Message handling, chat loop, tool dispatch
+│   │   ├── tools/               # Anthropic tool-use definitions
+│   │   │   └── klines_csv.py          # `get_klines_csv` tool + schema
 │   │   └── prompts/             # LLM prompts
+│   │       ├── system_prompt.txt
+│   │       └── user_prompt.txt
 │   └── components/              # UI components
 │       └── charts/              # Chart visualizations
+│           ├── candlestick_chart.py
+│           └── realtime_chart.py
 ├── data/                         # Analysis results storage
 │   └── analysis_results/        # JSON analysis files
 ├── .streamlit/                   # Streamlit configuration
@@ -51,7 +66,6 @@ realtime-kline-dashboard/
 
 - Docker and Docker Compose installed
 - Anthropic API key (for Claude AI)
-- Google Gemini API key (optional, for alternative AI analysis)
 
 ### Installation
 
@@ -66,7 +80,6 @@ realtime-kline-dashboard/
    Create a `.env` file in the project root:
    ```bash
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
-   GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 3. **Build and run with Docker Compose**
@@ -162,9 +175,11 @@ The application uses Bybit's HTTP API to fetch historical K-line data:
 
 ### AI Analysis
 
-The SMC analysis is performed using:
-- **Claude AI** (Primary): Anthropic's language model
-- **Gemini AI** (Alternative): Google's language model
+The SMC analysis is performed using **Claude** (`claude-haiku-4-5`) via the Anthropic Messages API. The analysis pipeline is split across three modules under `src/ai/`:
+
+- **[src/ai/tools/klines_csv.py](src/ai/tools/klines_csv.py)** — Defines the `get_klines_csv` tool (and its schema) that Claude calls to fetch K-line data from Bybit on demand.
+- **[src/ai/helpers/functions.py](src/ai/helpers/functions.py)** — Conversation helpers: message accumulation, the `chat` wrapper, the tool-dispatch loop (`run_tools` / `run_conversation`), and assistant-message prefilling to force clean JSON output. The system prompt is sent with `cache_control: ephemeral` to take advantage of prompt caching across turns.
+- **[src/ai/analysis/candle_analysis.py](src/ai/analysis/candle_analysis.py)** — Orchestrates a full analysis run for a given symbol and persists the parsed JSON to `data/analysis_results/`.
 
 Analysis results are returned in structured JSON format containing market structure, liquidity zones, order blocks, fair value gaps, and trading setups.
 
@@ -217,17 +232,21 @@ Dashboard & Controls
     ├─→ Analysis Selection
     ├─→ Create New Analysis
     │       ↓
-    │   SMC Analysis Engine
+    │   candle_analysis.perform_candle_analysis(symbol)
     │       ↓
-    │   Fetch K-line Data (Bybit API)
+    │   helpers/functions.run_conversation  ──┐
+    │       ↓                                  │ tool-use loop
+    │   Claude (claude-haiku-4-5)              │ (cached system prompt)
+    │       ↓                                  │
+    │   tool_use → get_klines_csv ─→ Bybit ───┘
     │       ↓
-    │   AI Analysis (Claude/Gemini)
+    │   Assistant prefill "{" → final JSON
     │       ↓
-    │   Save JSON Results
+    │   Save to data/analysis_results/
     │
     └─→ Chart Rendering
-        ├─→ Parse Analysis Data
-        ├─→ Visualize Elements
+        ├─→ analysis/parse_analysis.py
+        ├─→ components/charts/* (lightweight-charts)
         └─→ Display Metadata
 ```
 
