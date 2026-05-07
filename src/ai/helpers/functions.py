@@ -95,8 +95,12 @@ def run_tools(message):
     return tool_result_blocks
 
 def run_conversation(messages, system=None):
+    """Run a conversation loop with the model, handling tool calls and responses."""
     while True:
         response = chat(messages, system=system, tools=[get_klines_csv_schema])
+
+        print(f"\nToken Usage:")
+        print(f"Input tokens: {response.usage}")
 
         if response.stop_reason != "tool_use":
             # Use assistant prefill to force clean JSON output
@@ -133,4 +137,5 @@ if __name__ == "__main__":
         system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
     )
 
-    print(messages)
+    final_response = json.loads(messages[-1]["content"])
+    print(final_response)
