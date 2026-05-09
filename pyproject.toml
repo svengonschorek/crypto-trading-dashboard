@@ -3,7 +3,7 @@ name = "realtime-kline-dashboard"
 version = "0.1.0"
 description = "Pulling data from binance websocket for live data visualization."
 dependencies = [
-    "streamlit>=1.50.0",
+    "streamlit==1.57.0",
     "streamlit-browser-session-storage>=0.0.12",
     "streamlit-local-storage>=0.0.25",
     "streamlit-screen-stats>=0.0.82",

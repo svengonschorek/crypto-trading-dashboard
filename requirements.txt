@@ -1,4 +1,4 @@
-streamlit>=1.50.0
+streamlit==1.50.0
 streamlit-browser-session-storage>=0.0.12
 streamlit-local-storage>=0.0.25
 streamlit-screen-stats>=0.0.82
